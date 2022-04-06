@@ -388,18 +388,18 @@ namespace IHMCMsgUtils {
                                          0, msg_params);
         }
 
-        if( control_rarm ) {
-            // get relevant joint indices for right arm
-            std::vector<int> rarm_joint_indices;
-            getRelevantJointIndicesRightArm(rarm_joint_indices);
-            // get relevant configuration values for right arm
-            dynacore::Vector q_rarm;
-            selectRelevantJointsConfiguration(q, rarm_joint_indices, q_rarm);
-            // construct and set arm message for right arm
-            makeIHMCArmTrajectoryMessage(q_rarm,
-                                         wholebody_msg.right_arm_trajectory_message,
-                                         1, msg_params);
-        }
+        // if( control_rarm ) {
+        //     // get relevant joint indices for right arm
+        //     std::vector<int> rarm_joint_indices;
+        //     getRelevantJointIndicesRightArm(rarm_joint_indices);
+        //     // get relevant configuration values for right arm
+        //     dynacore::Vector q_rarm;
+        //     selectRelevantJointsConfiguration(q, rarm_joint_indices, q_rarm);
+        //     // construct and set arm message for right arm
+        //     makeIHMCArmTrajectoryMessage(q_rarm,
+        //                                  wholebody_msg.right_arm_trajectory_message,
+        //                                  1, msg_params);
+        // }
 
         // CHEST TRAJECTORY
         if( control_chest ) {

@@ -31,6 +31,7 @@ public:
     void transformCallback(const geometry_msgs::TransformStamped& tf_msg);
     void controlledLinkIdsCallback(const std_msgs::Int32MultiArray& arr_msg);
     void jointCommandCallback(const sensor_msgs::JointState& js_msg);
+    void poseCommandCallback(const geometry_msgs::PoseStamped& pose_msg);
     void statusCallback(const std_msgs::String& status_msg);
 
     // PUBLISH MESSAGE
@@ -54,6 +55,8 @@ private:
     ros::Subscriber controlled_link_sub_; // subscriber for listening for controlled link ids
     std::string joint_command_topic_; // topic to subscribe to for listening to joint commands
     ros::Subscriber joint_command_sub_; // subscriber for listening for joint commands
+    std::string pose_command_topic_; // topic to subscribe to for listening to joint commands
+    ros::Subscriber pose_command_sub_; // subscriber for listening for joint commands
     std::string status_topic_; // topic to subscribe to for listening to statuses
     ros::Subscriber status_sub_; // subscriber for listening to statuses
     std::string status_; // string indicating current status
@@ -71,6 +74,8 @@ private:
     bool stop_node_; // flag indicating when to publish whole body messages
 
     dynacore::Vector q_joint_; // vector of commanded joint positions
+    dynacore::Vector se3_pos_; // vector of commanded Cartesian position
+    dynacore::Quaternion se3_orientation_; // vector of commanded Cartesian orientation
     tf::Transform tf_pelvis_wrt_world_; // transform of pelvis in world frame
     dynacore::Vector q_; // full configuration vector, including virtual joints
     std::vector<int> controlled_links_; // vector of controlled links

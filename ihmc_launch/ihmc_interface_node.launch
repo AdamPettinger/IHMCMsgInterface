@@ -14,9 +14,11 @@
 	<!-- if not testing with controllers, robot pose and joint states will come from IKModuleTestNode -->
 	<arg unless="$(arg controllers)" name="pelvis_tf_topic" value="/IKModuleTestNode/nstgro20_valkyrie_ik/pelvis_transform"/>
 	<arg unless="$(arg controllers)" name="joint_command_topic" value="/IKModuleTestNode/nstgro20_valkyrie_ik/joint_commands"/>
+	<arg unless="$(arg controllers)" name="pose_command_topic" value="/IKModuleTestNode/nstgro20_valkyrie_ik/pose_commands"/>
 	<!-- if testing with controllers, robot pose and joint states will come from ControllerTestNode -->
 	<arg if="$(arg controllers)" name="pelvis_tf_topic" value="/ControllerTestNode/controllers/output/ihmc/pelvis_transform"/>
 	<arg if="$(arg controllers)" name="joint_command_topic" value="/ControllerTestNode/controllers/output/ihmc/joint_commands"/>
+	<arg if="$(arg controllers)" name="pose_command_topic" value="/ControllerTestNode/controllers/output/ihmc/pose_commands"/>
 	<!-- <arg name="status_topic" default="/ControllerTestNode/controllers/output/ihmc/controller_status"/> -->
 
 	<arg name="debug" default="false"/>
@@ -26,6 +28,7 @@
 	<node launch-prefix="$(arg launch_prefix)" pkg="IHMCMsgInterface" type="ihmc_interface_node" name="IHMCInterfaceNode" output="screen">
 		<param name="commands_from_controllers" value="$(arg controllers)"/>
 		<param name="joint_command_topic" value="$(arg joint_command_topic)"/>
+		<param name="pose_command_topic" value="$(arg pose_command_topic)"/>
 		<param name="pelvis_tf_topic" value="$(arg pelvis_tf_topic)"/>
 		<!-- only controllers will send statuses and controlled links, otherwise status topic not needed -->
 		<param if="$(arg controllers)" name="status_topic" value="/ControllerTestNode/controllers/output/ihmc/controller_status"/>

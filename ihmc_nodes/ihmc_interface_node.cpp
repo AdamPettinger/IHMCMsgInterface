@@ -17,6 +17,8 @@ IHMCInterfaceNode::IHMCInterfaceNode(const ros::NodeHandle& nh) {
               std::string("/ControllerTestNode/controllers/output/ihmc/controlled_link_ids"));
     nh_.param("joint_command_topic", joint_command_topic_,
               std::string("/ControllerTestNode/controllers/output/ihmc/joint_commands"));
+    nh_.param("pose_command_topic", pose_command_topic_,
+              std::string("/ControllerTestNode/controllers/output/ihmc/pose_commands"));
     nh_.param("status_topic", status_topic_,
               std::string("/ControllerTestNode/controllers/output/ihmc/controller_status"));
 
@@ -65,6 +67,7 @@ bool IHMCInterfaceNode::initializeConnections() {
     pelvis_transform_sub_ = nh_.subscribe(pelvis_tf_topic_, 1, &IHMCInterfaceNode::transformCallback, this);
     controlled_link_sub_ = nh_.subscribe(controlled_link_topic_, 1, &IHMCInterfaceNode::controlledLinkIdsCallback, this);
     joint_command_sub_ = nh_.subscribe(joint_command_topic_, 1, &IHMCInterfaceNode::jointCommandCallback, this);
+    pose_command_sub_ = nh_.subscribe(pose_command_topic_, 1, &IHMCInterfaceNode::poseCommandCallback, this);
     status_sub_ = nh_.subscribe(status_topic_, 1, &IHMCInterfaceNode::statusCallback, this);
 
     // publishers for sending whole-body messages
@@ -173,6 +176,39 @@ void IHMCInterfaceNode::jointCommandCallback(const sensor_msgs::JointState& js_m
     return;
 }
 
+void IHMCInterfaceNode::poseCommandCallback(const geometry_msgs::PoseStamped& pose_msg) {
+    if( receive_joint_command_ ) {
+        // resize vector for joint positions
+        se3_pos_.resize(3);
+        se3_pos_.setZero();
+
+        // populate vectors
+        se3_pos_[0] = pose_msg.pose.position.x;
+        se3_pos_[1] = pose_msg.pose.position.y;
+        se3_pos_[2] = pose_msg.pose.position.z;
+        se3_orientation_.x() = pose_msg.pose.orientation.x;
+        se3_orientation_.y() = pose_msg.pose.orientation.y;
+        se3_orientation_.z() = pose_msg.pose.orientation.z;
+        se3_orientation_.w() = pose_msg.pose.orientation.w;
+
+        // set flag indicating joint command has been received
+        received_joint_command_ = true;
+
+        // set flag to no longer receive joint command messages
+        if( !commands_from_controllers_ ) {
+            receive_joint_command_ = false;
+        }
+    }
+
+    // update flag to publish commands
+    updatePublishCommandsFlag();
+
+    // update flag to stop node
+    updateStopNodeFlag();
+
+    return;
+}
+
 void IHMCInterfaceNode::statusCallback(const std_msgs::String& status_msg) {
     if( status_msg.data == std::string("STOP-LISTENING") ) {
         // set status
@@ -246,6 +282,26 @@ void IHMCInterfaceNode::publishWholeBodyMessage() {
     // create whole-body message
     controller_msgs::WholeBodyTrajectoryMessage wholebody_msg;
     IHMCMsgUtils::makeIHMCWholeBodyTrajectoryMessage(q_, wholebody_msg, msg_params);
+
+    auto right_hand_msg = wholebody_msg.right_hand_trajectory_message;
+    se3_pos_.resize(3);
+    se3_pos_[0] = 0.146;
+    se3_pos_[1] = -0.458;
+    se3_pos_[2] = 0.919;
+    se3_orientation_.x() = 0.210;
+    se3_orientation_.y() = 0.230;
+    se3_orientation_.z() =  0.647;
+    se3_orientation_.w() =  0.696;
+    se3_orientation_.normalize();
+    IHMCMsgUtils::makeIHMCSE3TrajectoryMessage(se3_pos_, se3_orientation_, right_hand_msg.se3_trajectory,
+                                               msg_params.frame_params.trajectory_reference_frame_id_world,
+                                               msg_params.frame_params.data_reference_frame_id_world, msg_params);
+
+    right_hand_msg.robot_side = 1;
+    right_hand_msg.sequence_id = msg_params.sequence_id;
+    right_hand_msg.force_execution = msg_params.arm_params.force_execution;
+
+    wholebody_msg.right_hand_trajectory_message = right_hand_msg;
 
     // publish message
     wholebody_pub_.publish(wholebody_msg);
