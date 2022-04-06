@@ -79,6 +79,8 @@ private:
     tf::Transform tf_pelvis_wrt_world_; // transform of pelvis in world frame
     dynacore::Vector q_; // full configuration vector, including virtual joints
     std::vector<int> controlled_links_; // vector of controlled links
+
+    bool publish_msg_ = true;
 };
 
 #endif

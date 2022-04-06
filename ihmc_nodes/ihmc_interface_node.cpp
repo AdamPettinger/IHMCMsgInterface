@@ -286,14 +286,27 @@ void IHMCInterfaceNode::publishWholeBodyMessage() {
     auto right_hand_msg = wholebody_msg.right_hand_trajectory_message;
     se3_pos_.resize(3);
     se3_pos_[0] = 0.146;
-    se3_pos_[1] = -0.458;
-    se3_pos_[2] = 0.919;
+    se3_pos_[1] = -0.458 + 0.1;
+    se3_pos_[2] = 0.919 + 0.2;
     se3_orientation_.x() = 0.210;
     se3_orientation_.y() = 0.230;
-    se3_orientation_.z() =  0.647;
-    se3_orientation_.w() =  0.696;
+    se3_orientation_.z() = 0.647;
+    se3_orientation_.w() = 0.696;
     se3_orientation_.normalize();
-    IHMCMsgUtils::makeIHMCSE3TrajectoryMessage(se3_pos_, se3_orientation_, right_hand_msg.se3_trajectory,
+
+    Eigen::Isometry3d hand_pose;
+    hand_pose.translation() = se3_pos_;
+    hand_pose.linear() = se3_orientation_.normalized().toRotationMatrix();
+
+    Eigen::Isometry3d hand_offset;
+    hand_offset.translation() = Eigen::Vector3d(0.025, -0.07, 0.0);
+    Eigen::AngleAxisd hand_rotation_offset(M_PI/2, Eigen::Vector3d(0,0,-1));
+    hand_offset.linear() = hand_rotation_offset.toRotationMatrix();
+
+    Eigen::Isometry3d new_hand_pose = hand_pose*hand_offset;
+    Eigen::Quaterniond new_hand_orientation(new_hand_pose.linear());
+    
+    IHMCMsgUtils::makeIHMCSE3TrajectoryMessage(new_hand_pose.translation(), new_hand_orientation.normalized(), right_hand_msg.se3_trajectory,
                                                msg_params.frame_params.trajectory_reference_frame_id_world,
                                                msg_params.frame_params.data_reference_frame_id_world, msg_params);
 
@@ -304,7 +317,10 @@ void IHMCInterfaceNode::publishWholeBodyMessage() {
     wholebody_msg.right_hand_trajectory_message = right_hand_msg;
 
     // publish message
-    wholebody_pub_.publish(wholebody_msg);
+    if (publish_msg_) {
+        wholebody_pub_.publish(wholebody_msg);
+        publish_msg_ = false;
+    }
 
     return;
 }
