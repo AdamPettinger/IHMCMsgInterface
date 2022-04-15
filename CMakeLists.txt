@@ -17,6 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 catkin_package(
   CATKIN_DEPENDS roscpp tf geometry_msgs sensor_msgs std_msgs controller_msgs val_dynacore
+  INCLUDE_DIRS ihmc_utils ihmc_nodes
+  LIBRARIES ihmc_msg_utils
 )
 include_directories(${catkin_INCLUDE_DIRS})
 
@@ -31,4 +33,3 @@ include_directories (${catkin_INCLUDE_DIRS})
 add_subdirectory (ihmc_utils)
 add_subdirectory (ihmc_nodes)
 add_subdirectory (ihmc_tests)
-
